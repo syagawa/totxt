@@ -21,7 +21,7 @@ const getFiles = async (dir) => {
 
 const writeFile = async (filename, content) => {
   try{
-    await fs.writeFile(filename, content);
+    await fs.writeFile(filename, content, { encoding: "utf-8"});
   }catch(err){
     console.error(err);
   }
@@ -61,10 +61,14 @@ const parseText = (str) => {
   const reg3 = /◇.+\n/g;
   const rep3 = "$&\n";
 
+  const reg4 = /\<\!DOCTYPE.+\n/g;
+  const rep4 = "";
+
   newStr = newStr
     .replace(reg1, rep1)
     .replace(reg2, rep2)
-    .replace(reg3, rep3);
+    .replace(reg3, rep3)
+    .replace(reg4, rep4);
 
   return newStr;
 };

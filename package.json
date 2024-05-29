@@ -1,12 +1,12 @@
 {
   "dependencies": {
+    "@extensionengine/rtf-parser": "^1.0.1",
     "node-html-parser": "^6.1.13",
     "yargs": "^17.7.2"
   },
   "name": "to_txt",
   "version": "1.0.0",
   "main": "app.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

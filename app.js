@@ -1,6 +1,8 @@
 const fs  = require("node:fs/promises");
-const  htmlParser  = require("node-html-parser");
+const htmlParser  = require("node-html-parser");
 const path = require("path");
+const parseRTF = require('@extensionengine/rtf-parser');
+
 
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
@@ -43,10 +45,25 @@ const getData = async (pathtofile, encoding) => {
 
 
 
-const parseHtmlToTextContent = (html) => {
-  const root = htmlParser.parse(html);
+const parseHtmlToTextContent = (data) => {
+  const root = htmlParser.parse(data);
   // const str = root.textContent;
   const str = root.structuredText;
+  return str;
+};
+
+const parseRtfToTextContent = async (data) => {
+  const doc = await parseRTF(data)
+    .then(rtfdoc => {
+      return rtfdoc; 
+    });
+  const str =  doc.content
+    .map(paragraph => {
+      return paragraph.content
+        .map(span => span.value).join('');
+    })
+    .join('\n');
+
   return str;
 };
 
@@ -83,12 +100,38 @@ const main = async () => {
   
 
   for(let i = 0; i < files.length; i++){
-    const filename = path.join(dir, files[i]);
-    const d = await getData(filename);
-    const s1 = parseHtmlToTextContent(d);
-    const s2 = parseText(s1);
-    console.log(s2);
-    const newname = path.join("results", files[i].replace(".html", ".txt"));
+    const filename = files[i];
+    const pathname = path.join(dir, filename);
+    const d = await getData(pathname);
+
+    let s1 = "";
+    let s2 = "";
+    if(filename.includes(".html")){
+      s1 = parseHtmlToTextContent(d);
+      s2 = parseText(s1);
+    }else if(filename.includes(".rtf")){
+      s1 = await parseRtfToTextContent(d);
+      s2 = s1;
+    }
+
+    
+    if(!s2){
+      return;
+    }
+    let newfilename = filename;
+    try{
+
+      if(filename.includes(".rtf")){
+        const year = filename.match(/[0-9]{4}/)[0];
+        const month = filename.match(/([0-9]{1,2})月/)[1];
+        newfilename = `${year}${month.padStart(2, "0")}01.html`
+      }
+    }catch(err){
+      console.error(err);
+      console.log(filename);
+    }
+
+    const newname = path.join("results", newfilename.replace(".html", ".txt"));
     await writeFile(newname, s2);
   }
 
